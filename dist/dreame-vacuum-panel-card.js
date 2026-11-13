@@ -4,7 +4,7 @@
  * Desktop, tablet and phone layouts in one card. MIT License.
  */
 (() => {
-  const VERSION = '0.4.1';
+  const VERSION = '0.4.2';
   const TAG = 'dreame-vacuum-panel-card';
 
   /* ------------------------------------------------------------------ */
@@ -386,6 +386,7 @@ ha-card.dv::after{content:'';position:absolute;inset:0;border-radius:inherit;poi
 /* Dark theme: derived accents must follow the theme, not black out. */
 ha-card.dv.dark{
   --dv-pbtn:var(--dv-p);
+  --dv-bg2:color-mix(in srgb,var(--dv-bg) 95%,#fff);
   --dv-warnt:color-mix(in srgb,var(--dv-warn) 78%,#fff);
   --dv-errt:color-mix(in srgb,var(--dv-err) 75%,#fff);
   --dv-warnbg:color-mix(in srgb,var(--dv-warn) 18%,var(--dv-bg));
@@ -1214,7 +1215,8 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
         const [r, g, b, al] = ctx.getImageData(0, 0, 1, 1).data;
-        if (al > 200) this.shadowRoot.querySelector('ha-card')?.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
+        // В тёмных темах не заливаем карту светлым средним цветом картинки — там нужен фон темы.
+        if (al > 200 && !this._dark()) this.shadowRoot.querySelector('ha-card')?.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
       } catch (e) { /* cross-origin or not ready */ }
     }
 
