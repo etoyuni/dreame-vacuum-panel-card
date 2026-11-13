@@ -4,7 +4,7 @@
  * Desktop, tablet and phone layouts in one card. MIT License.
  */
 (() => {
-  const VERSION = '0.4.4';
+  const VERSION = '0.4.5';
   const TAG = 'dreame-vacuum-panel-card';
 
   /* ------------------------------------------------------------------ */
@@ -389,6 +389,7 @@ ha-card.dv.invmap .fit img,ha-card.dv.invmap .himg img{filter:invert(1) hue-rota
 ha-card.dv.dark{
   --dv-pbtn:var(--dv-p);
   --dv-bg2:color-mix(in srgb,var(--dv-bg) 95%,#fff);
+  --dv-mapbg:#000;
   --dv-warnt:color-mix(in srgb,var(--dv-warn) 78%,#fff);
   --dv-errt:color-mix(in srgb,var(--dv-err) 75%,#fff);
   --dv-warnbg:color-mix(in srgb,var(--dv-warn) 18%,var(--dv-bg));
@@ -1224,8 +1225,9 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
         const [r, g, b, al] = ctx.getImageData(0, 0, 1, 1).data;
         const lum = (r + g + b) / 3;
         sampledLight = al > 200 && lum > 128;
+        if (this._dark()) card.style.removeProperty('--dv-mapbg'); // сносим светлый фон от светлой темы
         // В светлой теме подгоняем фон под средний цвет картинки, чтобы не было рамок.
-        if (al > 200 && !this._dark()) card.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
+        else if (al > 200) card.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
       } catch (e) { /* tainted canvas — карты Dreame почти всегда светлые, считаем светлой */ }
       const cfg = this._config.invert_map;
       const want = cfg === true || cfg === 'on' ? true : cfg === false || cfg === 'off' ? false : sampledLight !== false;
