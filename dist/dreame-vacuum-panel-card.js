@@ -4,7 +4,7 @@
  * Desktop, tablet and phone layouts in one card. MIT License.
  */
 (() => {
-  const VERSION = '0.4.2';
+  const VERSION = '0.4.3';
   const TAG = 'dreame-vacuum-panel-card';
 
   /* ------------------------------------------------------------------ */
@@ -383,6 +383,8 @@ ha-card.dv{
 }
 /* Glass themes: corner highlights / card shadow from the theme, e.g. --ha-card-box-shadow. */
 ha-card.dv::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:var(--ha-card-box-shadow,none);z-index:40}
+/* Тёмная тема + светлая карта: инвертируем картинку, фон карты становится тёмным, цвета комнат сохраняются. */
+ha-card.dv.invmap .fit img,ha-card.dv.invmap .himg img{filter:invert(1) hue-rotate(180deg)}
 /* Dark theme: derived accents must follow the theme, not black out. */
 ha-card.dv.dark{
   --dv-pbtn:var(--dv-p);
@@ -1215,8 +1217,12 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
         const [r, g, b, al] = ctx.getImageData(0, 0, 1, 1).data;
-        // В тёмных темах не заливаем карту светлым средним цветом картинки — там нужен фон темы.
-        if (al > 200 && !this._dark()) this.shadowRoot.querySelector('ha-card')?.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
+        const card = this.shadowRoot.querySelector('ha-card');
+        const lum = (r + g + b) / 3;
+        // В тёмной теме не заливаем карту светлым средним цветом картинки; вместо этого
+        // светлую карту (у Dreame фон белый) инвертируем — фон карты становится тёмным.
+        if (card) card.classList.toggle('invmap', this._dark() && al > 200 && lum > 128);
+        if (al > 200 && !this._dark()) card?.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
       } catch (e) { /* cross-origin or not ready */ }
     }
 
