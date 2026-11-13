@@ -4,7 +4,7 @@
  * Desktop, tablet and phone layouts in one card. MIT License.
  */
 (() => {
-  const VERSION = '0.4.3';
+  const VERSION = '0.4.4';
   const TAG = 'dreame-vacuum-panel-card';
 
   /* ------------------------------------------------------------------ */
@@ -659,6 +659,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
         height: L('Height (CSS, optional)', 'Высота (CSS, необязательно)'), accent_color: L('Accent color (CSS, optional)', 'Акцентный цвет (CSS, необязательно)'), border_radius: L('Corner radius (px, default 12)', 'Радиус углов (px, по умолчанию 12)'), default_target: L('Default cleaning target', 'Цель уборки по умолчанию'),
         show_back: L('Show back button', 'Показывать кнопку «Назад»'), show_menu: L('Show HA menu button', 'Показывать кнопку меню HA'), fullscreen: L('Fill the screen in panel views', 'Разворачивать на весь экран в panel-режиме'),
         show_water_tank_draining: L('Show Water Tank Draining (needs drain & refill kit)', 'Показывать «Слив воды» (нужен комплект слива)'), show_auto_water_refilling: L('Show Auto Water Refilling (needs drain & refill kit)', 'Показывать «Автодолив воды» (нужен комплект слива)'),
+        invert_map: L('Invert map in dark mode', 'Инвертировать карту в тёмной теме'),
         care_warning: L('Care warning at (%)', 'Предупреждение об уходе (%)'), care_critical: L('Care critical at (%)', 'Критический износ (%)'),
       };
       return {
@@ -671,6 +672,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
               { name: 'layout', selector: { select: { mode: 'dropdown', options: [
                 { value: 'auto', label: L('Auto (by card width)', 'Авто (по ширине карточки)') }, { value: 'desktop', label: L('Desktop', 'Десктоп') }, { value: 'tablet', label: L('Tablet', 'Планшет') }, { value: 'phone', label: L('Phone', 'Телефон') }] } } },
               { name: 'default_target', selector: { select: { mode: 'dropdown', options: [{ value: 'all', label: L('All rooms', 'Все комнаты') }, { value: 'rooms', label: L('Rooms', 'Комнаты') }] } } },
+              { name: 'invert_map', selector: { select: { mode: 'dropdown', options: [{ value: 'auto', label: L('Auto (light maps only)', 'Авто (только светлые карты)') }, { value: 'on', label: L('Always', 'Всегда') }, { value: 'off', label: L('Never', 'Никогда') }] } } },
               { name: 'height', selector: { text: {} } },
               { name: 'accent_color', selector: { text: {} } },
               { name: 'border_radius', selector: { number: { min: 0, max: 32, mode: 'box' } } },
@@ -692,7 +694,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (!config || !config.entity || !String(config.entity).startsWith('vacuum.')) {
         throw new Error('Set "entity" to your Dreame vacuum, e.g. entity: vacuum.my_robot');
       }
-      this._config = { layout: 'auto', fullscreen: true, show_water_tank_draining: false, show_auto_water_refilling: false, care_warning: 20, care_critical: 10, default_target: 'all', ...config };
+      this._config = { layout: 'auto', fullscreen: true, show_water_tank_draining: false, show_auto_water_refilling: false, care_warning: 20, care_critical: 10, default_target: 'all', invert_map: 'auto', ...config };
       this._ui.target = this._ui.target || this._config.default_target;
       this._map = null;
       this._sig = null;
@@ -1211,19 +1213,23 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
     }
 
     _sampleBg(img) {
+      const card = this.shadowRoot.querySelector('ha-card');
+      if (!card) return;
+      let sampledLight = null; // null = замер не удался (например, cross-origin картинка)
       try {
         const c = document.createElement('canvas');
         c.width = 1; c.height = 1;
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
         const [r, g, b, al] = ctx.getImageData(0, 0, 1, 1).data;
-        const card = this.shadowRoot.querySelector('ha-card');
         const lum = (r + g + b) / 3;
-        // В тёмной теме не заливаем карту светлым средним цветом картинки; вместо этого
-        // светлую карту (у Dreame фон белый) инвертируем — фон карты становится тёмным.
-        if (card) card.classList.toggle('invmap', this._dark() && al > 200 && lum > 128);
-        if (al > 200 && !this._dark()) card?.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
-      } catch (e) { /* cross-origin or not ready */ }
+        sampledLight = al > 200 && lum > 128;
+        // В светлой теме подгоняем фон под средний цвет картинки, чтобы не было рамок.
+        if (al > 200 && !this._dark()) card.style.setProperty('--dv-mapbg', `rgb(${r},${g},${b})`);
+      } catch (e) { /* tainted canvas — карты Dreame почти всегда светлые, считаем светлой */ }
+      const cfg = this._config.invert_map;
+      const want = cfg === true || cfg === 'on' ? true : cfg === false || cfg === 'off' ? false : sampledLight !== false;
+      card.classList.toggle('invmap', this._dark() && want);
     }
 
     _renderRegions(force = false) {
