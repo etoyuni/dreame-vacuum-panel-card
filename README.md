@@ -77,6 +77,11 @@ The screenshots use a made-up floor plan. To retake them, see [`tools/screenshot
   category on its own screen. If your model has it, it shows up.
 - **History.** Recent cleaning runs with their maps, plus obstacle photos.
 - **Remote control.** A direction pad you press and hold to drive the robot, with three speeds.
+- **Русский язык.** With a Russian Home Assistant locale the whole card is in Russian —
+  navigation, controls, the settings menu, care alerts and the card editor — with proper
+  plural forms and localized numbers and dates. Entity states keep using Home Assistant's
+  own translations, with a built-in Russian fallback for what the integration doesn't
+  translate. Other languages fall back to English.
 - **Full screen and kiosk friendly.** In a panel view the card pins itself to the visible screen
   and stops the page from scrolling. Optional back and menu buttons appear in every layout.
 - **Blends in.** The card uses your theme's colors, corner radius and font, and works in light
@@ -168,7 +173,9 @@ tab bar; on desktop they sit at the top of the side menu.
   matches them by their entity ID (for example `select.<name>_suction_level`). If you renamed
   some, map them back with the `entities:` option.
 - **Labels.** Option and state labels come from Home Assistant's own translations, so they
-  follow your language.
+  follow your language. In Russian, options the integration doesn't translate fall back to
+  the card's own Russian strings. The card's own interface (menus, buttons, settings
+  categories, alerts) is translated for English and Russian; other languages use English.
 - **Units.** Areas and zone sizes follow Home Assistant's unit system (ft² or m²).
 - **Starting a clean.** The card calls the integration's services:
   - `dreame_vacuum.vacuum_clean_segment` for rooms

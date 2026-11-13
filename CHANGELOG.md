@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0
+
+- **Русский язык.** The card now follows Home Assistant's language: with a Russian
+  locale every built-in string is in Russian — navigation, cleaning controls, dock,
+  care alerts, settings menu, history, remote, the card editor, plus Russian
+  plural forms ("1 комната / 2 комнаты / 5 комнат"), localized numbers and dates.
+  Entity states keep using HA's own translations, with a built-in Russian fallback
+  for options the integration doesn't translate. English everywhere else.
+- **Theme adaptation.** The card detects dark mode (`hass.themes.darkMode`, falling
+  back to the theme's text colour) and no longer darkens the accent for primary
+  buttons in dark themes; warning/error tints are tuned per mode. The card corner
+  radius now follows `--ha-card-border-radius`, and the "no map" placeholder colour
+  follows the theme instead of a fixed grey.
+
 ## 0.3.1
 
 - **New screenshots** of the 0.3.0 layout, with more in a "More screenshots" section. Images
