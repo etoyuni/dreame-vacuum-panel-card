@@ -4,7 +4,7 @@
  * Desktop, tablet and phone layouts in one card. MIT License.
  */
 (() => {
-  const VERSION = '0.4.0';
+  const VERSION = '0.4.1';
   const TAG = 'dreame-vacuum-panel-card';
 
   /* ------------------------------------------------------------------ */
@@ -108,7 +108,7 @@
     washing_mops: ['Washing mops', 'Идёт стирка салфеток'],
     drying_mops: ['Drying mops', 'Идёт сушка салфеток'],
     min_left: ['{n} min left', 'осталось {n} мин'],
-    ready_docked: ['Ready · robot docked', 'Готово · робот в базе'],
+    ready_docked: ['Ready robot docked', 'Готово робот в базе'],
     ready: ['Ready', 'Готово'],
     busy: ['Busy', 'Занято'],
     battery: ['battery', 'заряд'],
@@ -143,7 +143,7 @@
     hint_all: ['Cleans every room on this map', 'Убирает во всех комнатах на этой карте'],
     hint_zone: ['Drag on the map to draw a zone', 'Проведите по карте, чтобы нарисовать зону'],
     clear: ['Clear', 'Очистить'],
-    hint_spot_set: ['Spot placed · tap elsewhere to move it', 'Точка поставлена · коснитесь другого места, чтобы переместить'],
+    hint_spot_set: ['Spot placed tap elsewhere to move it', 'Точка поставлена коснитесь другого места, чтобы переместить'],
     hint_spot: ['Tap the map to place a spot', 'Коснитесь карты, чтобы поставить точку'],
     no_rooms: ['No rooms found on this map.', 'На этой карте не найдено ни одной комнаты.'],
     no_map: ['No map yet. Check the map camera entity (camera.*_map).', 'Карта недоступна. Проверьте объект карты (camera.*_map).'],
@@ -151,9 +151,9 @@
     deselect: ['Deselect {n}', 'Снять выбор: {n}'],
     // dock
     dock: ['Dock', 'База'],
-    empty_bin: ['Empty bin', 'Опустошить'],
+    empty_bin: ['Empty bin', 'Очистить бак'],
     emptying: ['Emptying…', 'Опустошение…'],
-    wash_mops: ['Wash mops', 'Стирать салфетки'],
+    wash_mops: ['Wash mops', 'Промыть тряпки'],
     pause_wash: ['Pause wash', 'Пауза стирки'],
     resume_wash: ['Resume wash', 'Продолжить стирку'],
     stop_wash: ['Stop wash', 'Остановить стирку'],
@@ -202,7 +202,7 @@
     tank_det: ['Detergent cartridge', 'Картридж с моющим средством'],
     care_sub: ['Dock, parts and lifetime totals', 'База, расходники и статистика'],
     // settings
-    settings_sub: ['{t} · changes apply right away', '{t} · изменения применяются сразу'],
+    settings_sub: ['{t} changes apply right away', '{t} изменения применяются сразу'],
     settings_cats: ['Settings categories', 'Разделы настроек'],
     no_settings: ['No settings found for this robot.', 'Для этого робота настройки не найдены.'],
     more: ['More', 'Ещё'],
@@ -352,8 +352,8 @@
 [hidden]{display:none!important}
 ha-card.dv{
   --dv-bg:var(--ha-card-background,var(--card-background-color,#fff));
-  --dv-page:var(--primary-background-color,#f2f3f5);
-  --dv-bg2:var(--secondary-background-color,#eef0f3);
+  --dv-page:var(--ha-card-background,var(--primary-background-color,#f2f3f5));
+  --dv-bg2:color-mix(in srgb,var(--dv-bg) 92%,var(--dv-text));
   --dv-text:var(--primary-text-color,#1d2025);
   --dv-text2:var(--secondary-text-color,#5b616b);
   --dv-div:var(--divider-color,rgba(0,0,0,.12));
@@ -379,7 +379,10 @@ ha-card.dv{
   background:var(--dv-page);color:var(--dv-text);
   font-family:var(--ha-font-family-body,Roboto,'Helvetica Neue',system-ui,sans-serif);
   -webkit-font-smoothing:antialiased;
+  backdrop-filter:var(--ha-card-backdrop-filter,none);
 }
+/* Glass themes: corner highlights / card shadow from the theme, e.g. --ha-card-box-shadow. */
+ha-card.dv::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:var(--ha-card-box-shadow,none);z-index:40}
 /* Dark theme: derived accents must follow the theme, not black out. */
 ha-card.dv.dark{
   --dv-pbtn:var(--dv-p);
@@ -609,7 +612,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
 .stabs button.on{color:var(--dv-pt);border-bottom-color:var(--dv-p)}
 .stabs ha-icon{--mdc-icon-size:18px}
 .summary{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-radius:var(--dv-r);border:0;background:var(--dv-bg2);color:var(--dv-text);font-size:14px;cursor:pointer;text-align:left;width:100%}
-.ph.v{background:var(--dv-page);display:flex;flex-direction:column}
+.ph.v{background:transparent;display:flex;flex-direction:column}
 .ph-head{display:flex;align-items:center;gap:4px;padding:8px 8px 8px 4px;min-height:60px;background:var(--dv-bg);border-bottom:1px solid var(--dv-div);flex-shrink:0}
 .ph.v .view{flex:1 1 auto;padding:12px}
 .ph .hist{grid-template-columns:1fr;height:auto}
@@ -877,14 +880,20 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (cam && typeof cam === 'object' && Object.keys(cam).length) {
         return Object.values(cam)
           .filter((r) => r.visibility !== 'Hidden')
-          .map((r) => ({ id: Number(r.room_id ?? r.id), name: r.custom_name || r.name || `Room ${r.room_id}`, x: r.x, y: r.y, x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1 }));
+          .map((r) => ({ id: Number(r.room_id ?? r.id), name: this._roomName(r.custom_name || r.name || `Room ${r.room_id}`), x: r.x, y: r.y, x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1 }));
       }
       const all = this._a.rooms;
       if (all && typeof all === 'object') {
         const list = all[this._a.selected_map] || Object.values(all)[0] || [];
-        return list.map((r) => ({ id: Number(r.id), name: r.name }));
+        return list.map((r) => ({ id: Number(r.id), name: this._roomName(r.name) }));
       }
       return [];
+    }
+
+    /* Интеграция капитализирует каждое слово названия; для русского оставляем заглавную только первому слову. */
+    _roomName(n) {
+      if (this._lang() !== 'ru') return n;
+      return String(n).split(' ').map((w, i) => (i && /^[А-ЯЁ]/.test(w) && w.slice(1) === w.slice(1).toLowerCase() ? w.toLowerCase() : w)).join(' ');
     }
 
     _status() {
@@ -899,7 +908,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (fl.washingPaused) text = this._t('mop_wash_paused');
       else if (fl.washing) text = this._t('washing_mops');
       const room = this._live('sensor', 'current_room')?.state;
-      if ((running || paused) && room) text += ` · ${room}`;
+      if ((running || paused) && room) text += `\u2002${this._roomName(room)}`;
       let dot = '';
       if (st === 'error') dot = 'err';
       else if (fl.washingPaused) dot = 'warn';
@@ -1437,7 +1446,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
     _wetControl(dis) {
       const w = this._wet();
       if (!w) return '';
-      return `<div class="stack-s"><div class="between"><span class="lbl">${esc(this._t('wetness'))}</span><span class="small muted">${esc(w.name)} · ${w.v}</span></div>
+      return `<div class="stack-s"><div class="between"><span class="lbl">${esc(this._t('wetness'))}</span><span class="small muted">${esc(w.name)} ${w.v}</span></div>
         <div class="${dis ? 'dis' : ''}" style="${dis ? 'opacity:.5;pointer-events:none' : ''}"><input class="wet" type="range" min="${w.min}" max="${w.max}" step="${w.step}" value="${w.v}" data-a="num" data-e="${w.id}" aria-label="${esc(this._t('wetness'))}" aria-valuetext="${esc(w.name)}" ${dis ? 'disabled' : ''}>
         <div class="thirds">${WET_SHORT[this._lang()].map((n, i) => `<span class="${i === w.third ? 'on' : ''}" style="flex:${w.sizes[i]} 1 0">${n}</span>`).join('')}</div></div></div>`;
     }
@@ -1495,7 +1504,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (f.washing) return this._t('washing_mops');
       if (f.drying) {
         const left = num(a.drying_left ?? this._live('sensor', 'drying_left')?.state);
-        return `${this._t('drying_mops')}${left ? ` · ${this._t('min_left', { n: left })}` : ''}`;
+        return `${this._t('drying_mops')}${left ? ` ${this._t('min_left', { n: left })}` : ''}`;
       }
       const ae = this._live('sensor', 'auto_empty_status');
       if (ae && !/idle/i.test(ae.state)) return this._fmt(ae);
@@ -1580,7 +1589,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (!rooms.length) return `<span class="small muted">${esc(this._t('no_rooms'))}</span>`;
       return `<div class="chips ${wrap ? 'wrap' : ''}">${rooms.map((r) => {
         const i = sel.indexOf(r.id);
-        return `<button class="chip ${i >= 0 ? 'on' : ''}" aria-pressed="${i >= 0}" data-a="room" data-v="${r.id}">${i >= 0 ? `${i + 1} · ` : ''}${esc(r.name)}</button>`;
+        return `<button class="chip ${i >= 0 ? 'on' : ''}" aria-pressed="${i >= 0}" data-a="room" data-v="${r.id}">${i >= 0 ? `${i + 1} ` : ''}${esc(r.name)}</button>`;
       }).join('')}</div>`;
     }
 
@@ -1645,7 +1654,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       const l = Math.min(p0.l, p1.l), t = Math.min(p0.t, p1.t);
       const w = Math.abs(p1.l - p0.l), h = Math.abs(p1.t - p0.t);
       const mw = Math.abs(z[2] - z[0]) / 1000, mh = Math.abs(z[3] - z[1]) / 1000;
-      return `<div class="zbox" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%"><span>${this._dim(mw, mh)} · ${this._ui.passes}×</span></div>`;
+      return `<div class="zbox" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%"><span>${this._dim(mw, mh)} ${this._ui.passes}×</span></div>`;
     }
 
     _pop() {
@@ -1677,7 +1686,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       const nav = this._haNav('fab');
       return `${nav}<div class="spill"><span class="dot ${s.dot}"></span><div class="grow">
           <div class="ell" style="font-size:14px;font-weight:500">${esc(s.text)}</div>
-          <div class="ell xs muted">${esc(this._title())}${bat.v !== null ? ` · ${bat.v}%` : ''}${s.running || s.paused ? (this._measure('cleaned_area', 'cleaned_area', 'm²') ? ` · ${esc(this._measure('cleaned_area', 'cleaned_area', 'm²').text)}` : '') : ''}</div></div></div>
+          <div class="ell xs muted">${esc(this._title())}${bat.v !== null ? ` ${bat.v}%` : ''}${s.running || s.paused ? (this._measure('cleaned_area', 'cleaned_area', 'm²') ? ` ${esc(this._measure('cleaned_area', 'cleaned_area', 'm²').text)}` : '') : ''}</div></div></div>
         ${this._bell('fab')}
         <button class="fab ${this._ui.pop === 'menu' ? 'on' : ''}" data-a="pop" data-v="menu" aria-label="${esc(this._t('more'))}">${ic('mdi:dots-vertical')}</button>`;
     }
@@ -1689,7 +1698,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       if (!notes.length) return '';
       const n = notes[0];
       return `<button class="toast ${n.level === 'crit' ? 'crit' : ''}" data-a="pop" data-v="care">${ic(n.icon, `style="--mdc-icon-size:18px;color:var(${n.level === 'crit' ? '--dv-errt' : '--dv-warnt'})"`)}
-        <span class="grow ell"><b style="font-weight:500">${esc(n.title)}</b>${notes.length > 1 ? `<span class="muted"> · ${esc(this._t('more_n', { n: notes.length - 1 }))}</span>` : ''}</span><span style="font-weight:500;padding:0 8px;color:var(${n.level === 'crit' ? '--dv-errt' : '--dv-warnt'})">${esc(this._t('open2'))}</span></button>`;
+        <span class="grow ell"><b style="font-weight:500">${esc(n.title)}</b>${notes.length > 1 ? `<span class="muted"> ${esc(this._t('more_n', { n: notes.length - 1 }))}</span>` : ''}</span><span style="font-weight:500;padding:0 8px;color:var(${n.level === 'crit' ? '--dv-errt' : '--dv-warnt'})">${esc(this._t('open2'))}</span></button>`;
     }
 
     _summary() {
@@ -1703,7 +1712,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
         const hu = this._select('mop_pad_humidity') || this._select('water_volume'); if (this._wet()) parts.push(this._wet().name); else if (hu) parts.push(this._opt(hu.so, hu.value, false));
       }
       if (this._ui.target !== 'all') parts.push(`${this._ui.passes}×`);
-      return parts.join(' · ');
+      return parts.join(' ');
     }
 
     _sheet() {
@@ -1712,7 +1721,7 @@ input.time{font:inherit;font-size:14px;color:var(--dv-text);background:var(--dv-
       const dockShort = this._dockFlags().busy || (this._a.auto_empty_status && !/idle/i.test(this._a.auto_empty_status)) ? this._t('busy') : this._t('ready');
       const tabs = `<div class="grab"></div><div class="stabs" role="tablist">
         <button role="tab" class="${!dockTab ? 'on' : ''}" aria-selected="${!dockTab}" data-a="sheettab" data-v="clean">${ic('mdi:robot-vacuum')}${esc(this._t('view_clean'))}</button>
-        <button role="tab" class="${dockTab ? 'on' : ''}" aria-selected="${dockTab}" data-a="sheettab" data-v="dock">${ic('mdi:home-lightning-bolt-outline')}${esc(this._t('dock'))}<span class="xs muted" style="font-weight:400">· ${esc(dockShort)}</span></button></div>`;
+        <button role="tab" class="${dockTab ? 'on' : ''}" aria-selected="${dockTab}" data-a="sheettab" data-v="dock">${ic('mdi:home-lightning-bolt-outline')}${esc(this._t('dock'))}<span class="xs muted" style="font-weight:400;margin-left:6px">${esc(dockShort)}</span></button></div>`;
       if (dockTab) return tabs + this._dockBlock(true);
       const body = [this._targets()];
       if (u.target === 'rooms') body.push(this._chips(false));
